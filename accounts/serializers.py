@@ -1,7 +1,8 @@
 from rest_framework import serializers
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.password_validation import validate_password
-from .models import CustomUser
+
+UserModel = get_user_model()
 
 
 # ── Sign Up ───────────────────────────────────────────────────────────────────
@@ -10,13 +11,14 @@ class RegisterSerializer(serializers.ModelSerializer):
     full_name        = serializers.CharField(write_only=True)
     password         = serializers.CharField(write_only=True)
     confirm_password = serializers.CharField(write_only=True)
+    role             = serializers.CharField(write_only=True, required=False, default='REVIEWER')
 
     class Meta:
-        model  = CustomUser
+        model  = UserModel
         fields = ['full_name', 'email', 'role', 'password', 'confirm_password']
 
     def validate_email(self, value):
-        if CustomUser.objects.filter(email=value).exists():
+        if UserModel.objects.filter(email=value).exists():
             raise serializers.ValidationError("An account with this email already exists.")
         return value
 
@@ -39,18 +41,30 @@ class RegisterSerializer(serializers.ModelSerializer):
         base     = validated_data['email'].split('@')[0]
         username = base
         counter  = 1
-        while CustomUser.objects.filter(username=username).exists():
+        while UserModel.objects.filter(username=username).exists():
             username = f"{base}{counter}"
             counter += 1
 
-        return CustomUser.objects.create_user(
+        role_name = validated_data.pop('role', 'REVIEWER')
+        user = UserModel.objects.create_user(
             username   = username,
             email      = validated_data['email'],
             password   = validated_data['password'],
             first_name = first_name,
             last_name  = last_name,
-            role       = validated_data['role'],
         )
+        
+        # If the model has a ManyToMany 'roles' field (like core.User)
+        if hasattr(user, 'roles'):
+            from core.models import Role, UserRole
+            role_obj, _ = Role.objects.get_or_create(name=role_name)
+            UserRole.objects.get_or_create(user=user, role=role_obj)
+        elif hasattr(user, 'role'):
+            # Fallback for models with singular 'role' field
+            user.role = role_name
+            user.save()
+            
+        return user
 
 
 # ── Sign In ───────────────────────────────────────────────────────────────────
@@ -60,9 +74,8 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
     def validate(self, data):
-        try:
-            user = CustomUser.objects.get(email=data['email'])
-        except CustomUser.DoesNotExist:
+        user = UserModel.objects.filter(email=data['email']).first()
+        if not user:
             raise serializers.ValidationError("No account found with this email.")
 
         user = authenticate(username=user.username, password=data['password'])
@@ -81,7 +94,7 @@ class ForgotPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
     def validate_email(self, value):
-        if not CustomUser.objects.filter(email=value).exists():
+        if not UserModel.objects.filter(email=value).exists():
             raise serializers.ValidationError("No account found with this email.")
         return value
 
@@ -103,12 +116,11 @@ class ResetPasswordSerializer(serializers.Serializer):
 # ── User Profile ──────────────────────────────────────────────────────────────
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    full_name    = serializers.SerializerMethodField()
+    full_name    = serializers.CharField(read_only=True)
     role_display = serializers.CharField(source='get_role_display', read_only=True)
+    role         = serializers.CharField(read_only=True)
 
     class Meta:
-        model  = CustomUser
+        model  = UserModel
         fields = ['id', 'username', 'email', 'full_name', 'first_name', 'last_name', 'role', 'role_display']
 
-    def get_full_name(self, obj):
-        return obj.get_full_name() or obj.username

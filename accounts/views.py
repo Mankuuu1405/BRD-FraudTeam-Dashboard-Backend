@@ -9,7 +9,9 @@ from django.utils.encoding import force_bytes, force_str
 from django.core.mail import send_mail
 from django.conf import settings
 
-from .models import CustomUser
+from django.contrib.auth import get_user_model
+
+UserModel = get_user_model()
 from .serializers import (
     RegisterSerializer, LoginSerializer,
     ForgotPasswordSerializer, ResetPasswordSerializer,
@@ -114,7 +116,7 @@ class ForgotPasswordView(APIView):
         serializer = ForgotPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user  = CustomUser.objects.get(email=serializer.validated_data['email'])
+        user  = UserModel.objects.get(email=serializer.validated_data['email'])
         uid   = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
         link  = f"{getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')}/reset-password/{uid}__{token}/"
@@ -144,7 +146,7 @@ class ResetPasswordView(APIView):
         try:
             uid, token = serializer.validated_data['token'].split('__')
             uid  = force_str(urlsafe_base64_decode(uid))
-            user = CustomUser.objects.get(pk=uid)
+            user = UserModel.objects.get(pk=uid)
         except Exception:
             return Response({'error': 'Invalid or expired link.'}, status=status.HTTP_400_BAD_REQUEST)
 

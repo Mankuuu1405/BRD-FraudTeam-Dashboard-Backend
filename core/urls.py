@@ -8,6 +8,8 @@ from .views import (
     RoleDetailDeleteView,
     PermissionMatrixView,
     ModuleListView,
+    UserListView,
+    GroupListView,
 )
 
 urlpatterns = [
@@ -15,6 +17,8 @@ urlpatterns = [
     path('profile/', AccountProfileView.as_view(), name='account-profile'),
     path('email/', UpdateEmailView.as_view(), name='update-email'),
     path('password/', UpdatePasswordView.as_view(), name='update-password'),
+    path('users/', UserListView.as_view(), name='user-list'),
+    path('groups/', GroupListView.as_view(), name='group-list'),
 
     # Notification Preferences
     path('notifications/', NotificationPreferenceView.as_view(), name='notifications'),

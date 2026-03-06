@@ -62,6 +62,7 @@ class Case(models.Model):
 
     # Fraud Metrics
     fraud_score = models.IntegerField(default=0)
+    risk_level = models.CharField(max_length=20, default="LOW")
     synthetic_status = models.CharField(max_length=20, default="CLEAR")
     aml_status = models.CharField(max_length=20, default="CLEAR")
     behavioral_risk = models.CharField(max_length=20, default="LOW")

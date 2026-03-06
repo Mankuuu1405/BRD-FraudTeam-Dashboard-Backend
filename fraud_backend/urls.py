@@ -34,28 +34,13 @@ urlpatterns = [
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/auth/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
 
-    # Core App (Settings)
-    path('api/settings/', include('core.urls')),
-
-    # Cases App
-    path('api/cases/', include('cases.urls')),
-
-    # Reports App
-    path('api/reports/', include('reports.urls')),
-
-    # Dashboard App
-    path('dashboard/', include('dashboard.urls')),
-    path("api/", include("accounts.urls")),
-    path('admin/', admin.site.urls),
-
-    # Accounts — Sign In / Sign Up / Forgot Password
+    # Apps
     path('api/accounts/', include('accounts.urls')),
-
-    # Core — Settings (profile, roles, permissions, notifications)
-    path('api/', include('core.urls')),
-
-    # Cases
+    path('api/analytics/', include('Analytics.urls')),
+    path('api/fraud/', include('dashboard.urls')),
     path('api/cases/', include('cases.urls')),
+    path('api/reports/', include('reports.urls')),
+    path('api/settings/', include('core.urls')),
 ]
 
 # Serve media files during development

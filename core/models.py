@@ -1,6 +1,7 @@
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.conf import settings
 
 
 class Role(models.Model):
@@ -45,6 +46,19 @@ class User(AbstractUser):
             **{f"can_{action}": True}
         ).exists()
 
+    @property
+    def role(self):
+        # Compatibility with accounts app which expects a single role string
+        r = self.roles.first()
+        return r.name if r else "REVIEWER"
+
+    @property
+    def full_name(self):
+        return self.get_full_name() or self.username
+
+    def get_role_display(self):
+        return self.role.capitalize()
+
 
 class UserRole(models.Model):
     user        = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_roles')
@@ -59,7 +73,7 @@ class UserRole(models.Model):
 
 
 class NotificationPreference(models.Model):
-    user                      = models.OneToOneField(User, on_delete=models.CASCADE, related_name='notification_preferences')
+    user                      = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notification_preferences')
     fraud_alert_notifications = models.BooleanField(default=False)
     aml_screening_alerts      = models.BooleanField(default=False)
     case_status_updates       = models.BooleanField(default=False)

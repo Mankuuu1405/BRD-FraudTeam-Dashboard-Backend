@@ -3,7 +3,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
-from .models import User, NotificationPreference, Role, Module, Permission
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
+
+UserModel = get_user_model()
+from .models import NotificationPreference, Role, Module, Permission
 from core.serializers import (
     UserSerializer,
     UpdateEmailSerializer,
@@ -12,7 +16,8 @@ from core.serializers import (
     RoleSerializer,
     RoleCreateSerializer,
     PermissionSerializer,
-    PermissionMatrixSerializer
+    PermissionMatrixSerializer,
+    GroupSerializer
 )
 # ─── Account ────────────────────────────────────────────────────────────────
 
@@ -130,7 +135,19 @@ class PermissionMatrixView(APIView):
         return Response({'detail': 'Permissions saved successfully.'})
 
 
-# ─── Modules ──────────────────────────────────────────────────────────────────
+# ─── Teams / Users ────────────────────────────────────────────────────────────
+
+class UserListView(generics.ListAPIView):
+    """GET /api/settings/users/"""
+    queryset = UserModel.objects.all().order_by('username')
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+class GroupListView(generics.ListAPIView):
+    """GET /api/settings/groups/"""
+    queryset = Group.objects.all().order_by('name')
+    serializer_class = GroupSerializer
+    permission_classes = [IsAuthenticated]
 
 class ModuleListView(generics.ListAPIView):
     """GET  /api/settings/modules/"""

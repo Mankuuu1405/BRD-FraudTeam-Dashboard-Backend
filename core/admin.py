@@ -125,7 +125,7 @@ class UserAdmin(BaseUserAdmin):
     list_filter = ['is_staff', 'is_superuser', 'is_active']
     ordering = ['username']
     readonly_fields = ['last_login', 'date_joined']
-    inlines = [NotificationPreferenceInline, UserRoleInline]
+    inlines = [UserRoleInline]
 
     def get_roles(self, obj):
         roles = [ur.role.name for ur in obj.user_roles.select_related('role').all()]

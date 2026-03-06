@@ -9,6 +9,7 @@ class Report(models.Model):
         ("AML_SANCTION", "AML Sanction"),
         ("HIGH_RISK", "High Risk"),
         ("SYNTHETIC_ID", "Synthetic ID"),
+        ("ALL_CASES", "All Case Records"),
     ]
 
     report_type = models.CharField(max_length=50, choices=REPORT_TYPES)

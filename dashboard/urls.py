@@ -1,8 +1,8 @@
 from django.urls import path
-from . import views
-from .views import EditProfileView
+from .views import EditProfileView, AnalyticsDashboardView
 
 urlpatterns = [
-    path('', views.dashboard, name='dashboard'),
-    path('api/settings/profile/edit/', EditProfileView.as_view()),
+    path('dashboard/', AnalyticsDashboardView.as_view(), name='dashboard-api'),
+    path('analytics/', AnalyticsDashboardView.as_view(), name='analytics-api'),
+    path('settings/profile/edit/', EditProfileView.as_view()),
 ]
